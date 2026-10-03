@@ -58,6 +58,11 @@ protected:
     // event if the control has wxTE_PROCESS_ENTER flag.
     bool HandleKeyPressEvent(QWidget* widget, QKeyEvent* e)
     {
+        // Give the wxEVT_CHAR_HOOK handlers a chance to intercept this key
+        // before any normal processing, as the other ports do.
+        if ( m_handler->QtSendCharHookEvent(e) )
+            return true;
+
         if ( m_handler->HasFlag(wxTE_PROCESS_ENTER) )
         {
             if ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter )

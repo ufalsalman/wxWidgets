@@ -165,6 +165,7 @@ public:
     virtual bool QtHandlePaintEvent  ( QWidget *handler, QPaintEvent *event );
     virtual bool QtHandleResizeEvent ( QWidget *handler, QResizeEvent *event );
     virtual bool QtHandleWheelEvent  ( QWidget *handler, QWheelEvent *event );
+    virtual bool QtSendCharHookEvent ( const QKeyEvent *event );
     virtual bool QtHandleKeyEvent    ( QWidget *handler, QKeyEvent *event );
     virtual bool QtHandleMouseEvent  ( QWidget *handler, QMouseEvent *event );
     virtual bool QtHandleEnterEvent  ( QWidget *handler, QEvent *event );

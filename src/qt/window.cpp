@@ -1677,6 +1677,20 @@ wxWindowQt::QtShouldUseAccelerator ( QKeyEvent *event )
 
 #endif // wxUSE_ACCEL
 
+// Send wxEVT_CHAR_HOOK event for this key press and return true only if it
+// was processed (and not allowed to continue), in which case the key must not
+// be handled any further. This must be done before any normal key processing
+// to allow parent windows to handle keys in their children, as the other
+// ports do.
+bool wxWindowQt::QtSendCharHookEvent ( const QKeyEvent *event )
+{
+    wxKeyEvent e( wxEVT_KEY_DOWN );
+    QtFillKeyEvent( e, event );
+
+    wxKeyEvent eventCharHook( wxEVT_CHAR_HOOK, e );
+    return HandleWindowEvent( eventCharHook ) && !eventCharHook.IsNextEventAllowed();
+}
+
 bool wxWindowQt::QtHandleKeyEvent ( QWidget *WXUNUSED( handler ), QKeyEvent *event )
 {
     // qt sends keyup and keydown events for autorepeat, but this is not
