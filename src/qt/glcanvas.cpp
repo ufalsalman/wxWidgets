@@ -17,6 +17,10 @@
 #include <QtWidgets/QGestureRecognizer>
 #include <QtWidgets/QGestureEvent>
 
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+
 #include "wx/glcanvas.h"
 
 wxGCC_WARNING_SUPPRESS(unused-parameter)
@@ -57,6 +61,18 @@ void wxQtGLWidget::resizeGL(int w, int h)
 
 void wxQtGLWidget::paintGL()
 {
+    // Temporary instrumentation for the video seek path, active only when
+    // AEGISUB_PROFILE_SEEK is set: this is the moment the GL content actually
+    // becomes visible on screen.
+    static const bool profileSeek = getenv("AEGISUB_PROFILE_SEEK") != nullptr;
+    if ( profileSeek )
+    {
+        const auto now = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        fprintf(stderr, "[seek] paintGL us=%lld\n", (long long)now);
+        fflush(stderr);
+    }
+
     wxPaintEvent event( GetHandler() );
     EmitEvent(event);
 }
