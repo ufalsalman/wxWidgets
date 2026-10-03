@@ -495,7 +495,19 @@ bool wxGLCanvas::Create(wxWindow *parent,
 
 bool wxGLCanvas::SwapBuffers()
 {
-    // Not possible
+    // QOpenGLWidget renders into a framebuffer which Qt composites to the
+    // screen only while handling a paint event. If the application drew
+    // outside of paintGL (e.g. after data arrived in the background), the
+    // new content would not become visible until some unrelated repaint
+    // happened, so schedule a repaint here. Requesting one while a paint
+    // event is being processed would cause an endless repaint loop, hence
+    // the check.
+    if ( QWidget* const widget = GetHandle() )
+    {
+        if ( !widget->testAttribute( Qt::WA_WState_InPaintEvent ) )
+            widget->update();
+    }
+
     return true;
 }
 
