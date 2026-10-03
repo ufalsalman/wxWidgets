@@ -13,6 +13,7 @@
 #include <QtGui/QPen>
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
+#include <QtGui/QTextLayout>
 
 #ifndef WX_PRECOMP
     #include "wx/icon.h"
@@ -421,6 +422,53 @@ void wxQtDCImpl::DoGetTextExtent(const wxString& string,
 
     if (externalLeading != nullptr)
         *externalLeading = metrics.leading();
+}
+
+bool wxQtDCImpl::DoGetPartialTextExtents(const wxString& text, wxArrayInt& widths) const
+{
+    widths.Empty();
+    if ( text.empty() )
+        return true;
+
+    const QString qs = wxQtConvertString(text);
+
+    // Measuring each character separately, as the generic implementation
+    // does, ignores kerning and shaping and makes the caret positions in
+    // wxStyledTextCtrl drift away from the glyphs actually rendered by
+    // QPainter::drawText(), so lay out the whole string with the same text
+    // engine used for drawing instead. Strings containing line breaks or
+    // tabs are left to the generic implementation, as their layout differs
+    // from the per-character one in ways cursorToX() can't express.
+    if ( qs.contains('\n') || qs.contains('\r') || qs.contains('\t') )
+        return wxDCImpl::DoGetPartialTextExtents(text, widths);
+
+    QTextLayout layout(qs, m_font.GetHandle());
+    QTextOption option = layout.textOption();
+    option.setWrapMode(QTextOption::NoWrap);
+    option.setFlags(QTextOption::IncludeTrailingSpaces);
+    layout.setTextOption(option);
+
+    layout.beginLayout();
+    QTextLine line = layout.createLine();
+    layout.endLayout();
+
+    if ( !line.isValid() )
+        return wxDCImpl::DoGetPartialTextExtents(text, widths);
+
+    // Fill one entry per wxString character (wxChar), mapping any surrogate
+    // pairs to their position in the UTF-16 string used by Qt, with the entry
+    // containing the width up to and including the corresponding character.
+    widths.Add(0, text.length());
+    int n = 0;
+    int posUtf16 = 0;
+    for ( const auto c : text )
+    {
+        posUtf16 += c.GetValue() < 0x10000 ? 1 : 2;
+        int cursor = posUtf16;
+        widths[n++] = wxRound(line.cursorToX(&cursor));
+    }
+
+    return true;
 }
 
 void wxQtDCImpl::Clear()
