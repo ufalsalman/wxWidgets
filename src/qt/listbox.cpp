@@ -294,7 +294,15 @@ void wxListBox::DoSetSelection(int n, bool select)
         return;
     }
 
-    GetQListWidget()->item(n)->setSelected(select);
+    QListWidgetItem* item = GetQListWidget()->item(n);
+    if ( !item )
+    {
+        // Ignore out of range selections like the other ports do instead of
+        // dereferencing a null item.
+        return;
+    }
+
+    item->setSelected(select);
 }
 
 int wxListBox::DoInsertItems(const wxArrayStringsAdapter & items,
