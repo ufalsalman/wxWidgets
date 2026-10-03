@@ -1976,6 +1976,13 @@ bool wxWindowQt::QtHandleChangeEvent ( QWidget *handler, QEvent *event )
 
         return ProcessWindowEvent( e );
     }
+    else if ( event->type() == QEvent::PaletteChange )
+    {
+        wxSysColourChangedEvent e;
+        e.SetEventObject(this);
+        ProcessWindowEvent(e);
+        return false;
+    }
     else
         return false;
 }
