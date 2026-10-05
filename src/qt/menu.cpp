@@ -62,12 +62,25 @@ private:
 // wxMenu implementation
 //-----------------------------------------------------------------------------
 
+// Forward QMenu::aboutToShow() as wxEVT_MENU_OPEN, like the other ports do,
+// so that handlers which update their menus when they are shown (e.g.
+// dynamically generated recent files menus) work.
+static void QtConnectMenuOpen(QMenu *qtMenu, wxMenu *menu)
+{
+    QObject::connect( qtMenu, &QMenu::aboutToShow, qtMenu, [menu]()
+    {
+        wxMenuEvent event( wxEVT_MENU_OPEN, 0, menu );
+        wxMenu::ProcessMenuEvent( menu, event, menu->GetWindow() );
+    });
+}
+
 wxMenu::wxMenu(long style)
     : wxMenuBase( style )
 {
     m_qtMenu = new QMenu();
 
     ApplyStyle( m_qtMenu, style );
+    QtConnectMenuOpen( m_qtMenu, this );
 }
 
 wxMenu::wxMenu(const wxString& title, long style)
@@ -76,6 +89,7 @@ wxMenu::wxMenu(const wxString& title, long style)
     m_qtMenu = new QMenu( wxQtConvertString( title ));
 
     ApplyStyle( m_qtMenu, style );
+    QtConnectMenuOpen( m_qtMenu, this );
 }
 
 
