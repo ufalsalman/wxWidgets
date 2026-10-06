@@ -1631,6 +1631,10 @@ bool wxWindowQt::QtHandleWheelEvent ( QWidget *WXUNUSED( handler ), QWheelEvent 
     e.m_linesPerAction = 3;
     e.m_wheelDelta = 120;
 
+    // Applications rely on the keyboard state being part of wheel events
+    // (e.g. Ctrl+wheel to zoom in Aegisub's audio display).
+    wxQtFillKeyboardModifiers( event->modifiers(), &e );
+
     return ProcessWindowEvent( e );
 }
 
